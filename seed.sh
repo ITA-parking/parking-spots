@@ -56,27 +56,7 @@ curl -sf -X POST "$BASE_URL/operating-hours" \
 echo "Done"
 
 echo ""
-echo "==> Creating parking spots..."
-
-for i in $(seq 1 5); do
-    curl -sf -X POST "$BASE_URL/parking-spots" \
-        -H "Content-Type: application/json" \
-        -H "$AUTH" \
-        -d "{\"parking_region_id\":\"$REGION_A_ID\",\"spot_number\":\"A$i\"}" > /dev/null
-done
-
-for i in $(seq 1 3); do
-    curl -sf -X POST "$BASE_URL/parking-spots" \
-        -H "Content-Type: application/json" \
-        -H "$AUTH" \
-        -d "{\"parking_region_id\":\"$REGION_B_ID\",\"spot_number\":\"B$i\"}" > /dev/null
-done
-
-echo "Created 5 spots in City Center (A1-A5), 3 spots in Airport (B1-B3)"
-
 echo ""
 echo "==> Done! Summary:"
 echo "  City Center region ID: $REGION_A_ID"
 echo "  Airport region ID:     $REGION_B_ID"
-echo ""
-echo "  Try: curl -H \"Authorization: Bearer \$JWT\" $BASE_URL/parking-spots?available=true"

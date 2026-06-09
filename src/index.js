@@ -6,7 +6,6 @@ const migrate = require('./migrate');
 const authMiddleware = require('./middleware/auth');
 
 const parkingRegionsRouter = require('./routes/parkingRegions');
-const parkingSpotsRouter = require('./routes/parkingSpots');
 const pricingRouter = require('./routes/pricing');
 const operatingHoursRouter = require('./routes/operatingHours');
 
@@ -17,7 +16,6 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get('/openapi.json', (req, res) => res.json(swaggerSpec));
 
 app.use('/parking-regions', authMiddleware, parkingRegionsRouter);
-app.use('/parking-spots', authMiddleware, parkingSpotsRouter);
 app.use('/pricing', authMiddleware, pricingRouter);
 app.use('/operating-hours', authMiddleware, operatingHoursRouter);
 

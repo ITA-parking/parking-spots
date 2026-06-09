@@ -22,11 +22,3 @@ CREATE TABLE pricing (
     valid_from       DATE NOT NULL,
     valid_to         DATE
 );
-
-CREATE TABLE parking_spot (
-    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    parking_region_id UUID NOT NULL REFERENCES parking_region(id) ON DELETE CASCADE,
-    spot_number      TEXT NOT NULL,
-    available        BOOLEAN NOT NULL DEFAULT true,
-    created_at       TIMESTAMP DEFAULT NOW()
-);

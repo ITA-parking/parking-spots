@@ -42,17 +42,6 @@ const options = {
                         },
                     ],
                 },
-                ParkingSpot: {
-                    type: 'object',
-                    properties: {
-                        id: { type: 'string', format: 'uuid' },
-                        parking_region_id: { type: 'string', format: 'uuid' },
-                        region_name: { type: 'string' },
-                        spot_number: { type: 'string' },
-                        available: { type: 'boolean' },
-                        created_at: { type: 'string', format: 'date-time' },
-                    },
-                },
                 Pricing: {
                     type: 'object',
                     properties: {
