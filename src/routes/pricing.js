@@ -2,7 +2,27 @@ const express = require('express');
 const pool = require('../db');
 const router = express.Router();
 
-// GET /pricing?regionId= - list pricing for a region
+/**
+ * @openapi
+ * /pricing:
+ *   get:
+ *     summary: List pricing entries
+ *     tags: [Pricing]
+ *     parameters:
+ *       - in: query
+ *         name: regionId
+ *         schema: { type: string, format: uuid }
+ *         description: Filter by parking region
+ *     responses:
+ *       200:
+ *         description: List of pricing entries
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Pricing'
+ */
 router.get('/', async (req, res) => {
     try {
         const { regionId } = req.query;
@@ -27,7 +47,39 @@ router.get('/', async (req, res) => {
     }
 });
 
-// POST /pricing
+/**
+ * @openapi
+ * /pricing:
+ *   post:
+ *     summary: Create a pricing entry for a region
+ *     tags: [Pricing]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [parking_region_id, price_per_hour, valid_from]
+ *             properties:
+ *               parking_region_id: { type: string, format: uuid }
+ *               price_per_hour: { type: number, format: float }
+ *               currency: { type: string, default: EUR }
+ *               valid_from: { type: string, format: date }
+ *               valid_to: { type: string, format: date, nullable: true }
+ *     responses:
+ *       201:
+ *         description: Created pricing entry
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Pricing'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post('/', async (req, res) => {
     try {
         const { parking_region_id, price_per_hour, currency, valid_from, valid_to } = req.body;
@@ -47,7 +99,27 @@ router.post('/', async (req, res) => {
     }
 });
 
-// DELETE /pricing/:id
+/**
+ * @openapi
+ * /pricing/{id}:
+ *   delete:
+ *     summary: Delete a pricing entry
+ *     tags: [Pricing]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     responses:
+ *       204:
+ *         description: Deleted
+ *       404:
+ *         description: Not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.delete('/:id', async (req, res) => {
     try {
         const { rowCount } = await pool.query('DELETE FROM pricing WHERE id = $1', [req.params.id]);

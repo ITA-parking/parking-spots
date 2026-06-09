@@ -2,7 +2,29 @@ const express = require('express');
 const pool = require('../db');
 const router = express.Router();
 
-// GET /parking-regions - list all regions with current pricing
+/**
+ * @openapi
+ * /parking-regions:
+ *   get:
+ *     summary: List all parking regions with current pricing
+ *     tags: [Parking Regions]
+ *     responses:
+ *       200:
+ *         description: List of regions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/ParkingRegion'
+ *                   - type: object
+ *                     properties:
+ *                       price_per_hour: { type: number }
+ *                       currency: { type: string }
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ */
 router.get('/', async (req, res) => {
     try {
         const { rows } = await pool.query(`
@@ -22,7 +44,31 @@ router.get('/', async (req, res) => {
     }
 });
 
-// GET /parking-regions/:id - single region with pricing and operating hours
+/**
+ * @openapi
+ * /parking-regions/{id}:
+ *   get:
+ *     summary: Get a parking region with current pricing and operating hours
+ *     tags: [Parking Regions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     responses:
+ *       200:
+ *         description: Region detail
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ParkingRegionDetail'
+ *       404:
+ *         description: Region not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.get('/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -56,7 +102,36 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// POST /parking-regions
+/**
+ * @openapi
+ * /parking-regions:
+ *   post:
+ *     summary: Create a new parking region
+ *     tags: [Parking Regions]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name]
+ *             properties:
+ *               name: { type: string }
+ *               description: { type: string }
+ *     responses:
+ *       201:
+ *         description: Created region
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ParkingRegion'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post('/', async (req, res) => {
     try {
         const { name, description } = req.body;
@@ -73,7 +148,41 @@ router.post('/', async (req, res) => {
     }
 });
 
-// PUT /parking-regions/:id
+/**
+ * @openapi
+ * /parking-regions/{id}:
+ *   put:
+ *     summary: Update a parking region
+ *     tags: [Parking Regions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name]
+ *             properties:
+ *               name: { type: string }
+ *               description: { type: string }
+ *     responses:
+ *       200:
+ *         description: Updated region
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ParkingRegion'
+ *       404:
+ *         description: Region not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -93,7 +202,27 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// DELETE /parking-regions/:id
+/**
+ * @openapi
+ * /parking-regions/{id}:
+ *   delete:
+ *     summary: Delete a parking region
+ *     tags: [Parking Regions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     responses:
+ *       204:
+ *         description: Deleted
+ *       404:
+ *         description: Region not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.delete('/:id', async (req, res) => {
     try {
         const { rowCount } = await pool.query('DELETE FROM parking_region WHERE id = $1', [req.params.id]);

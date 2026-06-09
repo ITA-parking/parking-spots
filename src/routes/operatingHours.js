@@ -4,7 +4,27 @@ const router = express.Router();
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-// GET /operating-hours?regionId=
+/**
+ * @openapi
+ * /operating-hours:
+ *   get:
+ *     summary: List operating hours
+ *     tags: [Operating Hours]
+ *     parameters:
+ *       - in: query
+ *         name: regionId
+ *         schema: { type: string, format: uuid }
+ *         description: Filter by parking region
+ *     responses:
+ *       200:
+ *         description: List of operating hours entries
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/OperatingHours'
+ */
 router.get('/', async (req, res) => {
     try {
         const { regionId } = req.query;
@@ -29,7 +49,38 @@ router.get('/', async (req, res) => {
     }
 });
 
-// POST /operating-hours
+/**
+ * @openapi
+ * /operating-hours:
+ *   post:
+ *     summary: Create an operating hours entry for a region
+ *     tags: [Operating Hours]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [parking_region_id, day_of_week, open_time, close_time]
+ *             properties:
+ *               parking_region_id: { type: string, format: uuid }
+ *               day_of_week: { type: integer, minimum: 0, maximum: 6, description: '0=Sunday, 6=Saturday' }
+ *               open_time: { type: string, example: '08:00:00' }
+ *               close_time: { type: string, example: '20:00:00' }
+ *     responses:
+ *       201:
+ *         description: Created entry
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/OperatingHours'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post('/', async (req, res) => {
     try {
         const { parking_region_id, day_of_week, open_time, close_time } = req.body;
@@ -52,7 +103,41 @@ router.post('/', async (req, res) => {
     }
 });
 
-// PUT /operating-hours/:id
+/**
+ * @openapi
+ * /operating-hours/{id}:
+ *   put:
+ *     summary: Update operating hours entry
+ *     tags: [Operating Hours]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [open_time, close_time]
+ *             properties:
+ *               open_time: { type: string, example: '08:00:00' }
+ *               close_time: { type: string, example: '20:00:00' }
+ *     responses:
+ *       200:
+ *         description: Updated entry
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/OperatingHours'
+ *       404:
+ *         description: Not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.put('/:id', async (req, res) => {
     try {
         const { open_time, close_time } = req.body;
@@ -72,7 +157,27 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// DELETE /operating-hours/:id
+/**
+ * @openapi
+ * /operating-hours/{id}:
+ *   delete:
+ *     summary: Delete an operating hours entry
+ *     tags: [Operating Hours]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     responses:
+ *       204:
+ *         description: Deleted
+ *       404:
+ *         description: Not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.delete('/:id', async (req, res) => {
     try {
         const { rowCount } = await pool.query('DELETE FROM operating_hours WHERE id = $1', [req.params.id]);

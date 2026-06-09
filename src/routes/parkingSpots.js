@@ -2,7 +2,31 @@ const express = require('express');
 const pool = require('../db');
 const router = express.Router();
 
-// GET /parking-spots?regionId=&available=true - search spots
+/**
+ * @openapi
+ * /parking-spots:
+ *   get:
+ *     summary: Search parking spots
+ *     tags: [Parking Spots]
+ *     parameters:
+ *       - in: query
+ *         name: regionId
+ *         schema: { type: string, format: uuid }
+ *         description: Filter by parking region
+ *       - in: query
+ *         name: available
+ *         schema: { type: boolean }
+ *         description: Filter by availability
+ *     responses:
+ *       200:
+ *         description: List of parking spots
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/ParkingSpot'
+ */
 router.get('/', async (req, res) => {
     try {
         const { regionId, available } = req.query;
@@ -35,7 +59,31 @@ router.get('/', async (req, res) => {
     }
 });
 
-// GET /parking-spots/:id
+/**
+ * @openapi
+ * /parking-spots/{id}:
+ *   get:
+ *     summary: Get a parking spot by ID
+ *     tags: [Parking Spots]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     responses:
+ *       200:
+ *         description: Parking spot
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ParkingSpot'
+ *       404:
+ *         description: Not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.get('/:id', async (req, res) => {
     try {
         const { rows } = await pool.query(`
@@ -52,7 +100,36 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// POST /parking-spots
+/**
+ * @openapi
+ * /parking-spots:
+ *   post:
+ *     summary: Create a new parking spot
+ *     tags: [Parking Spots]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [parking_region_id, spot_number]
+ *             properties:
+ *               parking_region_id: { type: string, format: uuid }
+ *               spot_number: { type: string }
+ *     responses:
+ *       201:
+ *         description: Created spot
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ParkingSpot'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post('/', async (req, res) => {
     try {
         const { parking_region_id, spot_number } = req.body;
@@ -71,7 +148,41 @@ router.post('/', async (req, res) => {
     }
 });
 
-// PATCH /parking-spots/:id/availability - update availability (called by parking service)
+/**
+ * @openapi
+ * /parking-spots/{id}/availability:
+ *   patch:
+ *     summary: Update availability of a parking spot
+ *     description: Called by the parking service when a session starts or ends.
+ *     tags: [Parking Spots]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [available]
+ *             properties:
+ *               available: { type: boolean }
+ *     responses:
+ *       200:
+ *         description: Updated spot
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ParkingSpot'
+ *       404:
+ *         description: Not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.patch('/:id/availability', async (req, res) => {
     try {
         const { available } = req.body;
@@ -91,7 +202,27 @@ router.patch('/:id/availability', async (req, res) => {
     }
 });
 
-// DELETE /parking-spots/:id
+/**
+ * @openapi
+ * /parking-spots/{id}:
+ *   delete:
+ *     summary: Delete a parking spot
+ *     tags: [Parking Spots]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     responses:
+ *       204:
+ *         description: Deleted
+ *       404:
+ *         description: Not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.delete('/:id', async (req, res) => {
     try {
         const { rowCount } = await pool.query('DELETE FROM parking_spot WHERE id = $1', [req.params.id]);

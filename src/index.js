@@ -1,5 +1,7 @@
 require('dotenv').config();
 const express = require('express');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger');
 const migrate = require('./migrate');
 const authMiddleware = require('./middleware/auth');
 
@@ -10,6 +12,9 @@ const operatingHoursRouter = require('./routes/operatingHours');
 
 const app = express();
 app.use(express.json());
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get('/openapi.json', (req, res) => res.json(swaggerSpec));
 
 app.use('/parking-regions', authMiddleware, parkingRegionsRouter);
 app.use('/parking-spots', authMiddleware, parkingSpotsRouter);
