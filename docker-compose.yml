@@ -11,5 +11,16 @@ services:
     volumes:
       - parking_spots_data:/var/lib/postgresql
 
+  activemq:
+    image: apache/activemq-classic:latest
+    restart: unless-stopped
+    ports:
+      - "61616:61616"   # OpenWire
+      - "61613:61613"   # STOMP
+      - "61614:61614"   # STOMP over WebSocket
+      - "8161:8161"     # Web console
+    environment:
+      ACTIVEMQ_BROKER_NAME: parking-broker
+
 volumes:
   parking_spots_data:

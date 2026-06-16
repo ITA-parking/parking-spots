@@ -1,6 +1,10 @@
 const express = require('express');
+const { from } = require('rxjs');
+const { map, catchError } = require('rxjs/operators');
 const pool = require('../db');
 const router = express.Router();
+
+const query$ = (sql, params) => from(pool.query(sql, params));
 
 /**
  * @openapi
@@ -23,28 +27,30 @@ const router = express.Router();
  *               items:
  *                 $ref: '#/components/schemas/Pricing'
  */
-router.get('/', async (req, res) => {
-    try {
-        const { regionId } = req.query;
-        let query = `
-            SELECT p.*, r.name AS region_name
-            FROM pricing p
-            JOIN parking_region r ON r.id = p.parking_region_id
-            WHERE 1=1
-        `;
-        const params = [];
-        if (regionId) {
-            params.push(regionId);
-            query += ` AND p.parking_region_id = $${params.length}`;
-        }
-        query += ' ORDER BY p.valid_from DESC';
-
-        const { rows } = await pool.query(query, params);
-        res.json(rows);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Internal server error' });
+router.get('/', (req, res) => {
+    const { regionId } = req.query;
+    let sql = `
+        SELECT p.*, r.name AS region_name
+        FROM pricing p
+        JOIN parking_region r ON r.id = p.parking_region_id
+        WHERE 1=1
+    `;
+    const params = [];
+    if (regionId) {
+        params.push(regionId);
+        sql += ` AND p.parking_region_id = $${params.length}`;
     }
+    sql += ' ORDER BY p.valid_from DESC';
+
+    query$(sql, params).pipe(
+        map(result => result.rows),
+    ).subscribe({
+        next: rows => res.json(rows),
+        error: err => {
+            console.error(err);
+            res.status(500).json({ error: 'Internal server error' });
+        },
+    });
 });
 
 /**
@@ -80,23 +86,25 @@ router.get('/', async (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/', async (req, res) => {
-    try {
-        const { parking_region_id, price_per_hour, currency, valid_from, valid_to } = req.body;
-        if (!parking_region_id || price_per_hour == null || !valid_from) {
-            return res.status(400).json({ error: 'parking_region_id, price_per_hour and valid_from are required' });
-        }
-
-        const { rows } = await pool.query(
-            `INSERT INTO pricing (parking_region_id, price_per_hour, currency, valid_from, valid_to)
-             VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-            [parking_region_id, price_per_hour, currency || 'EUR', valid_from, valid_to || null]
-        );
-        res.status(201).json(rows[0]);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Internal server error' });
+router.post('/', (req, res) => {
+    const { parking_region_id, price_per_hour, currency, valid_from, valid_to } = req.body;
+    if (!parking_region_id || price_per_hour == null || !valid_from) {
+        return res.status(400).json({ error: 'parking_region_id, price_per_hour and valid_from are required' });
     }
+
+    query$(
+        `INSERT INTO pricing (parking_region_id, price_per_hour, currency, valid_from, valid_to)
+         VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+        [parking_region_id, price_per_hour, currency || 'EUR', valid_from, valid_to || null]
+    ).pipe(
+        map(result => result.rows[0]),
+    ).subscribe({
+        next: row => res.status(201).json(row),
+        error: err => {
+            console.error(err);
+            res.status(500).json({ error: 'Internal server error' });
+        },
+    });
 });
 
 /**
@@ -120,15 +128,19 @@ router.post('/', async (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.delete('/:id', async (req, res) => {
-    try {
-        const { rowCount } = await pool.query('DELETE FROM pricing WHERE id = $1', [req.params.id]);
-        if (rowCount === 0) return res.status(404).json({ error: 'Pricing entry not found' });
-        res.status(204).send();
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Internal server error' });
-    }
+router.delete('/:id', (req, res) => {
+    query$('DELETE FROM pricing WHERE id = $1', [req.params.id]).pipe(
+        map(result => result.rowCount),
+    ).subscribe({
+        next: count => {
+            if (count === 0) return res.status(404).json({ error: 'Pricing entry not found' });
+            res.status(204).send();
+        },
+        error: err => {
+            console.error(err);
+            res.status(500).json({ error: 'Internal server error' });
+        },
+    });
 });
 
 module.exports = router;

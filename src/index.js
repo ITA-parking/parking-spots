@@ -4,6 +4,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
 const migrate = require('./migrate');
 const authMiddleware = require('./middleware/auth');
+const { connect } = require('./messaging');
 
 const parkingRegionsRouter = require('./routes/parkingRegions');
 const pricingRouter = require('./routes/pricing');
@@ -25,6 +26,7 @@ const PORT = process.env.PORT || 8081;
 
 migrate()
     .then(() => {
+        connect();
         app.listen(PORT, () => console.log(`Parking-spots service running on port ${PORT}`));
     })
     .catch(err => {
