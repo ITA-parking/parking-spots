@@ -1,5 +1,5 @@
 FROM node:24-alpine
-RUN apt-get update && apt-get install -y ca-certificates curl && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache curl
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
